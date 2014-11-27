@@ -2,9 +2,17 @@ import _SharedTool
 import numpy as np
 
 def m():
-    a=_SharedTool.CreateShared("abdc",[200,200])
+    a=_SharedTool.CreateShared("abdc",[2,2])
     print type(a)
     print a
+    print "============================"
+    print _SharedTool.GiveShared("abdc")
+
+def mp():
+    a=_SharedTool.GiveShared("abdc")
+    print type(a)
+    print a
+    return a
 
 def m0():
     a=np.float64(np.random.randn(2,2))
@@ -18,4 +26,6 @@ def m1():
 
 
 #_SharedTool.ReadShared()
-m()
+
+if __name__=="__main__":
+    m()
