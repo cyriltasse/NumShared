@@ -7,6 +7,7 @@ def m():
     print a
     print "============================"
     print _SharedTool.GiveShared("abdc")
+    return a
 
 def mp():
     a=_SharedTool.GiveShared("abdc")

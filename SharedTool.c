@@ -32,6 +32,7 @@ void init_SharedTool(){
 /*   char buf[MAX_LEN]; */
 /* }; */
 
+
 static PyObject *CreateShared(PyObject *self, PyObject *args){
   PyObject *LShape;
   char *Name;
@@ -41,48 +42,12 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
 			&PyList_Type, &LShape
 			//&PyArray_Type,  &np_A
 			))  return NULL;
-  char NameSharedArray[80];
-  //NameSharedArray  = (char*)malloc(100);
-  strcpy(NameSharedArray,"/");
-  strcat(NameSharedArray,Name);
-  printf("%s\n",NameSharedArray);
   
-  //  char *NameSharedArray_Shape;
-  char NameSharedArray_Shape[80];//[80];
-  //NameSharedArray_Shape  = (char*)malloc(100);
-  strcpy(NameSharedArray_Shape,NameSharedArray);
-  strcat(NameSharedArray_Shape,".shape");
-  printf("%s\n",NameSharedArray_Shape);
   
-  char NameSharedArray_NDIM[80];
-  //NameSharedArray_NDIM  = (char*)malloc(100);
-  strcpy(NameSharedArray_NDIM,NameSharedArray);
-  strcat(NameSharedArray_NDIM,".size");
+  char *NameSharedArray=concat("/",Name);
+  char *NameSharedArray_Shape=concat(NameSharedArray,".shape");
+  char *NameSharedArray_NDIM=concat(NameSharedArray,".NDIM");
   printf("%s\n",NameSharedArray_NDIM);
-  
-  /* char NameSharedArray_Size2[800]; */
-  /* strcpy(NameSharedArray_Size2,NameSharedArray); */
-  /* strcat(NameSharedArray_Size2,".size2"); */
-  /* printf("%s\n",NameSharedArray_Size2); */
-  
-  
-  
-
-  /* char* NameSharedArray=concat("/",Name); */
-  /* printf("%s\n",NameSharedArray); */
-  
-  /* char* NameSharedArray_Shape=concat(NameSharedArray,".shape"); */
-  /* printf("%s\n",NameSharedArray_Shape); */
-  
-  /* char* NameSharedArray_Size=concat(NameSharedArray,".size"); */
-  /* printf("%s\n",NameSharedArray_Size); */
-  
-
-  
-  /* char NameSharedArray_NDIM[80]; */
-  /* strcpy(NameSharedArray_NDIM,NameSharedArray); */
-  /* strcat(NameSharedArray_NDIM,".ndim"); */
-  /* printf("%s\n",NameSharedArray_NDIM); */
   
 
   int NDIM=PyList_Size(LShape);
@@ -120,12 +85,14 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
 
   AllocateSharedMem(NameSharedArray,TotSize);
   double* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
-  for (i=0; i<TotSize; i++) {
-    SharedArray[i]=i;
-  }
+
+  /* for (i=0; i<TotSize; i++) { */
+  /*   SharedArray[i]=i; */
+  /* } */
 
   int typenum=NPY_FLOAT64;
-  npy_intp *NpShape;
+
+  npy_intp NpShape[NDIM];
   for (i=0; i<NDIM; i++) {
     NpShape[i]=Shape[i];
   }
@@ -133,7 +100,7 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
   PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, typenum, SharedArray);
 
   return PyArray_Return(Array);
-    //return Py_None;
+  //return Py_None;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -144,25 +111,11 @@ static PyObject *GiveShared(PyObject *self, PyObject *args){
   if (!PyArg_ParseTuple(args, "s", 
 			&Name
 			))  return NULL;
-  char NameSharedArray[80];
-  //NameSharedArray  = (char*)malloc(100);
-  strcpy(NameSharedArray,"/");
-  strcat(NameSharedArray,Name);
-  printf("%s\n",NameSharedArray);
   
-  //  char *NameSharedArray_Shape;
-  char NameSharedArray_Shape[80];//[80];
-  //NameSharedArray_Shape  = (char*)malloc(100);
-  strcpy(NameSharedArray_Shape,NameSharedArray);
-  strcat(NameSharedArray_Shape,".shape");
-  printf("%s\n",NameSharedArray_Shape);
-  
-  char NameSharedArray_NDIM[80];
-  //NameSharedArray_NDIM  = (char*)malloc(100);
-  strcpy(NameSharedArray_NDIM,NameSharedArray);
-  strcat(NameSharedArray_NDIM,".size");
-  printf("%s\n",NameSharedArray_NDIM);
-  
+  char *NameSharedArray=concat("/",Name);
+  char *NameSharedArray_Shape=concat(NameSharedArray,".shape");
+  char *NameSharedArray_NDIM=concat(NameSharedArray,".NDIM");
+
   int NDIM,i;
   double* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
   NDIM=*SharedNDIM;
@@ -191,9 +144,9 @@ static PyObject *GiveShared(PyObject *self, PyObject *args){
   }
   
   
-  for (i=0; i<TotSize; i++) {
-    printf("val %f\n",SharedArray[i]);
-  }
+  /* for (i=0; i<TotSize; i++) { */
+  /*   printf("val %f\n",SharedArray[i]); */
+  /* } */
 
 
   PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, typenum, SharedArray);
