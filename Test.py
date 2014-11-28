@@ -2,7 +2,7 @@ import _SharedTool
 import numpy as np
 
 def m():
-    a=_SharedTool.CreateShared("abdc",[2,2])
+    a=_SharedTool.CreateShared("abdc",[10000,20000])
     print type(a)
     print a
     print "============================"

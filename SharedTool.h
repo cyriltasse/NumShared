@@ -54,5 +54,6 @@ int GiveTotSize(int* Shape, int NDIM){
 static PyObject *NumpyToShared(PyObject *self, PyObject *args);
 static PyObject *CreateShared(PyObject *self, PyObject *args);
 static PyObject *GiveShared(PyObject *self, PyObject *args);
-void AllocateSharedMem(char* Name, int TotSize);
+static PyObject *Release(PyObject *self, PyObject *args);
+int AllocateSharedMem(char* Name, int TotSize);
 double* ReadSharedMem(char* Name, int TotSize);
