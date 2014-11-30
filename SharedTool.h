@@ -39,7 +39,7 @@ char* concat(char *s1, char *s2)
     return result;
 }
 
-int GiveTotSize(int* Shape, int NDIM){
+int GiveTotSize(int* Shape, int NDIM, int iType){
   int TotSize=Shape[0];
   int i;
   if(NDIM>1){
@@ -47,13 +47,28 @@ int GiveTotSize(int* Shape, int NDIM){
       TotSize*=Shape[i];
     }
   }
+
+  if(iType==1){TotSize=TotSize*2;};
+  
   printf("TotSize %i\n",TotSize);
   return TotSize;
 };
 
+//typedef double myfloat;
+#ifdef USE_DOUBLES
+typedef double myfloat;
+int Precision=1;
+#else 
+typedef float myfloat;
+int Precision=0;
+#endif
+
+
+
+void ClearShared(char* NameSharedArray, int TotSize);
 static PyObject *NumpyToShared(PyObject *self, PyObject *args);
 static PyObject *CreateShared(PyObject *self, PyObject *args);
 static PyObject *GiveShared(PyObject *self, PyObject *args);
 static PyObject *Release(PyObject *self, PyObject *args);
 int AllocateSharedMem(char* Name, int TotSize);
-double* ReadSharedMem(char* Name, int TotSize);
+myfloat* ReadSharedMem(char* Name, int TotSize);

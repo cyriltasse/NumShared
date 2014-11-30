@@ -1,12 +1,13 @@
-import _SharedTool
+from Single import _SharedTool as sNpShared
+from Double import _SharedTool as dNpShared
 import numpy as np
 
 def m():
-    a=_SharedTool.CreateShared("abdc",[10000,20000])
-    print type(a)
-    print a
-    print "============================"
-    print _SharedTool.GiveShared("abdc")
+    a=sNpShared.CreateShared("abdc",[100,200],"d")
+    # print type(a)
+    # print a
+    # print "============================"
+    print sNpShared.GiveShared("abdc")
     return a
 
 def mp():

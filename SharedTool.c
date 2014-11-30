@@ -34,24 +34,83 @@ void init_SharedTool(){
 /* }; */
 
 
+
 static PyObject *CreateShared(PyObject *self, PyObject *args){
   PyObject *LShape;
-  char *Name;
+  char *Name, *Type;
 
-  if (!PyArg_ParseTuple(args, "sO!", 
+  if (!PyArg_ParseTuple(args, "sO!s", 
 			&Name,
-			&PyList_Type, &LShape
+			&PyList_Type, &LShape,
+			&Type
 			//&PyArray_Type,  &np_A
 			))  return NULL;
   
   
+
   char *NameSharedArray=concat("/",Name);
   char *NameSharedArray_Shape=concat(NameSharedArray,".shape");
   char *NameSharedArray_NDIM=concat(NameSharedArray,".NDIM");
-  char *NameSharedArray_FD=concat(NameSharedArray,".FD");
+  char *NameSharedArray_Type=concat(NameSharedArray,".Type");
+  //  char *NameSharedArray_FD=concat(NameSharedArray,".FD");
   printf("%s\n",NameSharedArray_NDIM);
+
+  //// type
+  int iType,npType;
+  int comp=strcmp(Type,"d");
+  printf("comp %i\n",comp);
+  printf("PRECISION %i\n",Precision);
+  
+  if(strcmp(Type,"d")==0){
+    printf("set %s\n",Type);
+    iType=0;
+    if(Precision==0){
+      npType=(int)NPY_FLOAT32;
+    };
+    if(Precision==1){
+      npType=(int)NPY_FLOAT64;
+    };
+  };
+
+  if(strcmp(Type,"c")==0){
+    printf("set %s\n",Type);
+    iType=1;
+    if(Precision==0){
+      npType=(int)NPY_COMPLEX64;
+    };
+    if(Precision==1){
+      npType=(int)NPY_COMPLEX128;
+    };
+  };
+
+  printf("NPY_Type in1 %i\n",npType);
+  printf("NPY_Type in1 NPY_FLOAT32   : %i\n",NPY_FLOAT32);
+  printf("NPY_Type in1 NPY_COMPLEX64: %i\n",NPY_COMPLEX64);
+  printf("NPY_Type in1 NPY_FLOAT64   : %i\n",NPY_FLOAT64);
+  printf("NPY_Type in1 NPY_COMPLEX128: %i\n",NPY_COMPLEX128);
+  
+  /* int ii=0; */
+  /* if(ii==0){ */
+  /*   #define TYPE  double */
+  /* }else{ */
+  /*   #define TYPE  int */
+  /* } */
+  /* typedef TYPE DATATYPE; */
+  /* DATATYPE caca=1; */
+  /* printf("DATATYPE size %i\n",sizeof(DATATYPE)); */
+  /* printf("DATATYPE size %i\n",sizeof(double)); */
+  /* printf("DATATYPE size %i\n",sizeof(int)); */
   
 
+  int fd;
+  fd=AllocateSharedMem(NameSharedArray_Type,2);
+  myfloat* SharedType= ReadSharedMem(NameSharedArray_Type,2);
+  SharedType[0]=(myfloat)iType;
+  SharedType[1]=(myfloat)npType;
+  printf("NPY_Type in2 %f\n",SharedType[1]);
+
+
+  ///////
   int NDIM=PyList_Size(LShape);
   printf("NDIM=%i\n",NDIM);
   int i;
@@ -69,38 +128,35 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
   }
 
   
-  int TotSize=GiveTotSize(Shape,NDIM);
+  int TotSize=GiveTotSize(Shape,NDIM,iType);
 
-  int FD[3];
-  FD[0]=AllocateSharedMem(NameSharedArray_NDIM,1);
-  double* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
+
+  //int FD[3];
+  fd=AllocateSharedMem(NameSharedArray_NDIM,1);
+  myfloat* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
   *SharedNDIM=NDIM;
 
-  /* AllocateSharedMem(NameSharedArray_NDIM,1); */
-  /* double* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1); */
-  /* *SharedNDIM=NDIM; */
-
-  FD[1]=AllocateSharedMem(NameSharedArray_Shape,NDIM);
-  double* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
+  fd=AllocateSharedMem(NameSharedArray_Shape,NDIM);
+  myfloat* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
   for (i=0; i<NDIM; i++) {
     SharedShape[i]=Shape[i];
   }
 
-  FD[2]=AllocateSharedMem(NameSharedArray,TotSize);
-  double* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
+  fd=AllocateSharedMem(NameSharedArray,TotSize);
+  myfloat* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
 
-  int foo=AllocateSharedMem(NameSharedArray_FD,3);
-  double* SharedFD= ReadSharedMem(NameSharedArray_FD,3);
-  for (i=0; i<3; i++) {
-    SharedFD[i]=FD[i];
-  }
+  //int foo=AllocateSharedMem(NameSharedArray_FD,3);
+  //myfloat* SharedFD= ReadSharedMem(NameSharedArray_FD,3);
+  //for (i=0; i<3; i++) {
+  //  SharedFD[i]=FD[i];
+  //}
   
 
   for (i=0; i<TotSize; i++) {
     SharedArray[i]=i;
   }
 
-  int typenum=NPY_FLOAT64;
+  //int typenum=NPY_FLOAT64;
 
   npy_intp NpShape[NDIM];
   for (i=0; i<NDIM; i++) {
@@ -108,9 +164,10 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
   }
   
   //PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, typenum, SharedArray);
+  PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, npType, SharedArray);
 
-  //return PyArray_Return(Array);
-  return Py_None;
+  return PyArray_Return(Array);
+  //return Py_None;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -118,35 +175,49 @@ static PyObject *CreateShared(PyObject *self, PyObject *args){
 static PyObject *GiveShared(PyObject *self, PyObject *args){
   char *Name;
 
+
   if (!PyArg_ParseTuple(args, "s", 
 			&Name
 			))  return NULL;
+
   
   char *NameSharedArray=concat("/",Name);
   char *NameSharedArray_Shape=concat(NameSharedArray,".shape");
   char *NameSharedArray_NDIM=concat(NameSharedArray,".NDIM");
 
+  char *NameSharedArray_Type=concat(NameSharedArray,".Type");
+  int iType, npType;
+  myfloat* SharedType= ReadSharedMem(NameSharedArray_Type,2);
+  iType=(int)SharedType[0];
+  npType=(int)SharedType[1];
+  printf("read NPY_Type %i\n",npType);
+  printf("read NPY_Type %f\n",SharedType[1]);
+
+
+
+
   int NDIM,i;
-  double* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
+  myfloat* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
   NDIM=*SharedNDIM;
   printf("NDIM %i\n",NDIM);
   int Shape[NDIM];
-  double* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
+  myfloat* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
 
   for (i=0; i<NDIM; i++) {
     Shape[i]=SharedShape[i];
     printf("Shape %i: %i\n",i,Shape[i]);
   }
 
-  int TotSize=GiveTotSize(Shape,NDIM);
+  int TotSize=GiveTotSize(Shape,NDIM,iType);
   printf("TotSize %i\n",TotSize);
-  double* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
+
+
+  myfloat* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
   printf("val %f\n",SharedArray[0]);
   printf("val %f\n",SharedArray[1]);
   printf("val %f\n",SharedArray[2]);
   printf("val %f\n",SharedArray[3]);
 
-  int typenum=NPY_FLOAT64;
 
   npy_intp NpShape[NDIM];
   for (i=0; i<NDIM; i++) {
@@ -158,11 +229,13 @@ static PyObject *GiveShared(PyObject *self, PyObject *args){
   /*   printf("val %f\n",SharedArray[i]); */
   /* } */
 
+  //npType=NPY_FLOAT64;
 
-  //PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, typenum, SharedArray);
 
-  //return PyArray_Return(Array);
-  return Py_None;
+  PyArrayObject * Array = (PyArrayObject*)PyArray_SimpleNewFromData(NDIM, NpShape, npType, SharedArray);
+
+  return PyArray_Return(Array);
+  //return Py_None;
 }
 
 static PyObject *Release(PyObject *self, PyObject *args){
@@ -175,55 +248,56 @@ static PyObject *Release(PyObject *self, PyObject *args){
   char *NameSharedArray=concat("/",Name);
   char *NameSharedArray_Shape=concat(NameSharedArray,".shape");
   char *NameSharedArray_NDIM=concat(NameSharedArray,".NDIM");
-  char *NameSharedArray_FD=concat(NameSharedArray,".FD");
+  //char *NameSharedArray_FD=concat(NameSharedArray,".FD");
 
-  double* SharedFD= ReadSharedMem(NameSharedArray_FD,3);
+  //myfloat* SharedFD= ReadSharedMem(NameSharedArray_FD,3);
   
   
 
   int NDIM,i;
-  double* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
+  myfloat* SharedNDIM= ReadSharedMem(NameSharedArray_NDIM,1);
   NDIM=*SharedNDIM;
   int Shape[NDIM];
-  double* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
+  myfloat* SharedShape= ReadSharedMem(NameSharedArray_Shape,NDIM);
 
   for (i=0; i<NDIM; i++) {
     Shape[i]=SharedShape[i];
   }
 
-  int TotSize=GiveTotSize(Shape,NDIM);
-  double* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
+
+
+  char *NameSharedArray_Type=concat(NameSharedArray,".Type");
+  int iType, npType;
+  myfloat* SharedType= ReadSharedMem(NameSharedArray_Type,2);
+  iType=SharedType[0];
+  npType=SharedType[1];
+  int TotSize=GiveTotSize(Shape,NDIM,iType);
+  myfloat* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
   
-  printf("SharedFD %i\n",(int)SharedFD[0]);
-  printf("SharedFD %i\n",(int)SharedFD[1]);
-  printf("SharedFD %i\n",(int)SharedFD[2]);
+  /* printf("SharedFD %i\n",(int)SharedFD[0]); */
+  /* printf("SharedFD %i\n",(int)SharedFD[1]); */
+  /* printf("SharedFD %i\n",(int)SharedFD[2]); */
   
 
-  int fd0 = shm_open(NameSharedArray, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  int dummy=ftruncate(fd0, 0);
-  int mm0=munmap(SharedArray, TotSize*sizeof(double));
+  ClearShared(NameSharedArray,TotSize);
+  ClearShared(NameSharedArray_Shape,NDIM);
+  ClearShared(NameSharedArray_NDIM,1);
 
-  //close(fd0);
 
-  /* //int mm1=munmap(SharedNDIM, 1); */
-  /* //int mm2=munmap(SharedShape, NDIM); */
-  printf("mm=%i\n",mm0);
-  /* printf("mm=%i\n",mm1); */
-  /* printf("mm=%i\n",mm2); */
-  /* close((int)SharedFD[1]); */
-  /* close((int)SharedFD[2]); */
-
-  //int munmap(void *addr, size_t len);
-
-  int Unlink;
-  Unlink=shm_unlink(NameSharedArray);
-  /* Unlink=shm_unlink(NameSharedArray_Shape); */
-  /* Unlink=shm_unlink(NameSharedArray_NDIM); */
 
 
   return Py_None;
 }
 
+void ClearShared(char* NameSharedArray, int TotSize){
+  int Unlink;
+  int fd0 = shm_open(NameSharedArray, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  myfloat* SharedArray= ReadSharedMem(NameSharedArray,TotSize);
+  int dummy=ftruncate(fd0, 0);
+  int mm0=munmap(SharedArray, TotSize*sizeof(myfloat));
+  Unlink=shm_unlink(NameSharedArray);
+  close(fd0);
+};
 
 
 
@@ -235,12 +309,12 @@ int AllocateSharedMem(char* Name, int TotSize){
   printf("Unlink %i\n",Unlink);
 
   fd = shm_open(Name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  printf("===================fd %i",fd);
+  printf("===================fd %i\n",fd);
   if (fd == -1){
     printf("error0\n");
   };
   
-  if (ftruncate(fd, TotSize*sizeof(double)) == -1)
+  if (ftruncate(fd, TotSize*sizeof(myfloat)) == -1)
     {
       printf("error1\n");
     };
@@ -249,7 +323,7 @@ int AllocateSharedMem(char* Name, int TotSize){
   
 }
 
-double* ReadSharedMem(char* Name, int TotSize){
+myfloat* ReadSharedMem(char* Name, int TotSize){
 
   int Unlink,fd;
 
@@ -258,8 +332,8 @@ double* ReadSharedMem(char* Name, int TotSize){
     printf("error0\n");
   };
   
-  double *rptr;
-  rptr = mmap(NULL, TotSize*sizeof(double),
+  myfloat *rptr;
+  rptr = mmap(NULL, TotSize*sizeof(myfloat),
   	      PROT_READ | PROT_WRITE,
   	      MAP_SHARED, fd, 0);
 
