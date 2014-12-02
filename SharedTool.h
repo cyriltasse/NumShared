@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 /* ==== Prototypes =================================== */
@@ -50,25 +51,67 @@ int GiveTotSize(int* Shape, int NDIM, int iType){
 
   if(iType==1){TotSize=TotSize*2;};
   
-  printf("TotSize %i\n",TotSize);
+  //printf("TotSize %i\n",TotSize);
   return TotSize;
 };
 
 //typedef double myfloat;
-#ifdef USE_DOUBLES
+#ifdef USE_FLOAT64
 typedef double myfloat;
-int Precision=1;
-#else 
+int iType=0;
+int npType=NPY_FLOAT64;
+#endif
+
+#ifdef USE_FLOAT32
 typedef float myfloat;
-int Precision=0;
+int iType=0;
+int npType=NPY_FLOAT32;
+#endif
+
+#ifdef USE_COMPLEX64
+typedef float myfloat;
+int iType=1;
+int npType=NPY_COMPLEX64;
+#endif
+
+#ifdef USE_COMPLEX128
+typedef double myfloat;
+int iType=1;
+int npType=NPY_COMPLEX128;
+#endif
+
+#ifdef USE_BOOL
+typedef bool myfloat;
+int iType=0;
+int npType=NPY_BOOL;
+#endif
+
+#ifdef USE_INT32
+typedef int myfloat;
+int iType=0;
+int npType=NPY_INT32;
+#endif
+
+#ifdef USE_INT64
+typedef long int myfloat;
+int iType=0;
+int npType=NPY_INT64;
 #endif
 
 
+int TotSize_BufferTypes=1000*1000;
 
-void ClearShared(char* NameSharedArray, int TotSize);
+
 static PyObject *NumpyToShared(PyObject *self, PyObject *args);
 static PyObject *CreateShared(PyObject *self, PyObject *args);
 static PyObject *GiveShared(PyObject *self, PyObject *args);
 static PyObject *Release(PyObject *self, PyObject *args);
+static PyObject *GiveType(PyObject *self, PyObject *args);
+
+void ClearShared(char* NameSharedArray, int TotSize);
 int AllocateSharedMem(char* Name, int TotSize);
 myfloat* ReadSharedMem(char* Name, int TotSize);
+
+void ClearShared_Int(char* NameSharedArray, int TotSize);
+int AllocateSharedMem_Int(char* Name, int TotSize);
+int* ReadSharedMem_Int(char* Name, int TotSize);
